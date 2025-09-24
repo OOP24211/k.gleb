@@ -23,25 +23,33 @@ struct Buffer {
            // текущее собираемое слово
 };
 
-bool is_letter(unsigned char const symbol) {
-    return
-        (symbol >= 'A' && symbol <= 'Z') ||
-        (symbol >= 'a' && symbol <= 'z') ||
-        (symbol >= 0xC0 && symbol <= 0xDF) || // заглавные кириллические
-        (symbol >= 0xE0 && symbol <= 0xFF) || // строчные кириллические
-        symbol == 0xA8 || symbol == 0xB8;   // Ё, ё
 
-}
+namespace LetterUtils {
+    static bool is_letter(unsigned char const symbol) {
+        return
+            (symbol >= 'A' && symbol <= 'Z') ||
+            (symbol >= 'a' && symbol <= 'z') ||
+            (symbol >= 0xC0 && symbol <= 0xDF) || // заглавные кириллические
+            (symbol >= 0xE0 && symbol <= 0xFF) || // строчные кириллические
+            symbol == 0xA8 || symbol == 0xB8;   // Ё, ё
 
-void to_low_reg(unsigned char& symbol) {
-    if (symbol >= 'A' && symbol <= 'Z') {
-        symbol += 32;
-    } else if (symbol >= 0xC0 && symbol <= 0xDF) {
-        symbol += 0x20;
-    } else if (symbol == 0xA8) {
-        symbol = 0xB8;
     }
-}
+    static void to_low_reg(unsigned char& symbol) {
+        if (symbol >= 'A' && symbol <= 'Z') {
+            symbol += 32;
+        } else if (symbol >= 0xC0 && symbol <= 0xDF) {
+            symbol += 0x20;
+        } else if (symbol == 0xA8) {
+            symbol = 0xB8;
+        }
+    }
+};
+
+
+
+
+
+
 
 void init_buffer(Buffer& buff, std::ifstream& file, std::map<std::string, Word_stats>& words_map, size_t& total) {
     buff.file_in = &file;
@@ -71,8 +79,8 @@ void process_block(Buffer& buff, std::streamsize const bytes_read_count) {
 
     for (int j = 0; j < bytes_read_count; ++j) {
 
-        if (auto symbol = static_cast<unsigned char>(buff.buffer[j]);is_letter(symbol)){
-            to_low_reg(symbol);
+        if (auto symbol = static_cast<unsigned char>(buff.buffer[j]);LetterUtils::is_letter(symbol)){
+            LetterUtils::to_low_reg(symbol);
             current_word += static_cast<char>(symbol);
             } else {
                 add_word(current_word, buff);
