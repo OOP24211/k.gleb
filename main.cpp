@@ -9,7 +9,6 @@
 
 
 struct Word_stats {
-    std::string word;
     int cnt = 0; // количество вхождений слова
     double frequency = 0.0;
 };
@@ -55,9 +54,8 @@ class BufferManager {
         } else {
             map[word].cnt++;
         }
-        if (total_words_) {
-            (total_words_)++;
-        }
+         (total_words_)++;
+
         word.clear();
     }
      void process_block(std::streamsize const bytes_read_count) {
@@ -95,31 +93,51 @@ public:
 
 };
 
-void calculate_frequency(std::map<std::string, Word_stats>& Words_info) {
-    for (auto& [word, Word_stats] : Words_info) {
-        Word_stats.frequency = static_cast<double>(Word_stats.cnt) /  static_cast<double>(*buff.total_words);
+class WordsExporter {
+    std::string const file_;
+    std::map<std::string, Word_stats>& words_map_;
+    size_t& total_words_;
+
+public:
+    WordsExporter(std::string const &file,
+              std::map<std::string, Word_stats>& words_map,
+              size_t& total)
+:  file_(file), words_map_(words_map), total_words_(total) {}
+    void calculate_frequency() {
+        for (auto& [word, Word_stats] : words_map_) {
+            Word_stats.frequency = static_cast<double>(Word_stats.cnt) /  static_cast<double>(total_words_);
+        }
     }
-}
+
+    void export_to_csv() {
+        std::vector<std::pair<std::string, Word_stats>> vec(words_map_.begin(), words_map_.end());
+        std::sort(vec.begin(), vec.end(), [](const auto& a, const auto& b) {
+            return a.second.cnt > b.second.cnt;
+        });
+        std::ofstream file(file_);
+        if (!file.is_open()) {
+            std::cerr << "Ошибка при открытии файла вывода результата" << std::endl;
+            return;
+        }
+        file << "Word,Count,Frequency\n";
+
+        for (const auto& [word, data] : vec) {
+            file << word << "," << data.cnt << ",";
+            file << std::fixed << std::setprecision(2) << data.frequency * 100 << "%\n";
+        }
+        file.close();
+    }
 
 
-void sort_and_input_toCSV(const std::string& file_output, const std::map<std::string, Word_stats>& Words_info) {
-    std::vector<std::pair<std::string, Word_stats>> vec(Words_info.begin(), Words_info.end());
-    std::sort(vec.begin(), vec.end(), [](const auto& a, const auto& b) {
-        return a.second.cnt > b.second.cnt;
-    });
-    std::ofstream file(file_output);
-    if (!file.is_open()) {
-        std::cerr << "Ошибка при открытии файла вывода результата" << std::endl;
-        return;
-    }
-    file << "Word,Count,Frequency\n";
+};
 
-    for (const auto& [word, data] : vec) {
-        file << word << "," << data.cnt << ",";
-        file << std::fixed << std::setprecision(2) << data.frequency * 100 << "%\n";
-    }
-    file.close();
-}
+
+
+
+
+
+
+
 
 
 
@@ -139,12 +157,10 @@ int main(int argc, char* argv[]) {
     }
     std::map<std::string,Word_stats> Words_info;
     size_t total = 0;
-    Buffer buff;
-    BufferManager::init_buffer(buff, file_input, Words_info, total);
-    BufferManager::process_file(buff);
+    BufferManager(file_input, Words_info, total).process_file();
     file_input.close();
-    calculate_frequency(buff,Words_info);
-    sort_and_input_toCSV(file_output_name, Words_info);
+    WordsExporter(file_output_name, Words_info, total).calculate_frequency();
+    WordsExporter(file_output_name, Words_info, total).export_to_csv();
 
     return EXIT_SUCCESS;
 }
