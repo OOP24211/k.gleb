@@ -1,5 +1,5 @@
-#ifndef BUFFERMANAGER_HPP
-#define BUFFERMANAGER_HPP
+#pragma once
+
 #include <string>
 #include <map>
 #include <fstream>
@@ -24,4 +24,3 @@ public:
     void process_file();
 };
 
-#endif

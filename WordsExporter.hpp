@@ -1,5 +1,4 @@
-#ifndef WORDS_EXPORTER_HPP
-#define WORDS_EXPORTER_HPP
+#pragma once
 
 #include <string>
 #include <map>
@@ -18,4 +17,4 @@ public:
     void export_to_csv();
 };
 
-#endif // WORDS_EXPORTER_HPP
+

@@ -1,6 +1,5 @@
+#pragma once
 
-#ifndef WORDSTATS_HPP
-#define WORDSTATS_HPP
 
 struct Word_stats {
     int cnt = 0;
@@ -8,4 +7,3 @@ struct Word_stats {
 };
 
 
-#endif //WORDSTATS_HPP
