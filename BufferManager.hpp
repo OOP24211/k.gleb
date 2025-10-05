@@ -15,7 +15,7 @@ class BufferManager {
     size_t& total_words_;
 
     void add_word(std::string& word);
-    void process_block(std::streamsize bytes_read_count);
+    void extract_words_from_buffer(std::streamsize bytes_read_count);
 
 public:
     BufferManager(std::ifstream& file,

@@ -16,7 +16,7 @@ void BufferManager::add_word(std::string& word) {
     word.clear();
 }
 
-void BufferManager::process_block(std::streamsize const bytes_read_count) {
+void BufferManager::extract_words_from_buffer(std::streamsize const bytes_read_count) {
     for (std::streamsize j = 0; j < bytes_read_count; ++j) {
         unsigned char symbol = static_cast<unsigned char>(buffer_[j]);
         if (LetterUtils::is_letter(symbol)) {
@@ -36,11 +36,11 @@ BufferManager::BufferManager(std::ifstream& file,
 void BufferManager::process_file() {
     while (file_.read(buffer_, BUFFER_SIZE)) {
         std::streamsize const bytes_read_count = file_.gcount();
-        process_block(bytes_read_count);
+        extract_words_from_buffer(bytes_read_count);
     }
 
     if (std::streamsize const bytes_read_count = file_.gcount(); bytes_read_count > 0) {
-        process_block(bytes_read_count);
+        extract_words_from_buffer(bytes_read_count);
     }
 
     add_word(current_word_);
