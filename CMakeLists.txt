@@ -7,3 +7,4 @@ add_executable(lab0 main.cpp
         BufferManager.cpp
         WordsExporter.cpp
         LetterUtils.cpp)
+
