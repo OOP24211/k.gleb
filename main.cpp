@@ -2,31 +2,38 @@
 #include <list>
 #include <unordered_map>
 #include <tuple>
+#include <optional>
 
+template<typename K, typename V>
 class ICache {
 public:
-    virtual int get(int num) = 0;
-    virtual void put(int num, int new_value) = 0;
+    virtual V get(const K& num) = 0;
+    virtual void put(const K& num, const V& new_value) = 0;
+    virtual V& operator[](const K& key) = 0;
     virtual ~ICache() = default;
 };
 
-class LRUCache : public ICache {
-    std::unordered_map<int, std::list<std::pair<int, int>>::iterator> cache;
-    std::list<std::pair<int, int>> lru_list;
+template<typename K, typename V>
+class LRUCache : public ICache<K,V> {
+    std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> cache;
+    std::list<std::pair<K, V>> lru_list;
     const size_t capacity;
+    void update_lru_pos(std::list<std::pair<K,V>>::iterator list_iter) {
+        lru_list.splice(lru_list.begin(), lru_list, list_iter);
+
+    }
 
 public:
    explicit  LRUCache(size_t cap) : capacity(cap) {}
 
-    void put(int num, int new_val) override {
+    void put(const K& num, const V& new_val) override {
         if (cache.contains(num)) {
             auto list_iter = cache[num];
             list_iter->second = new_val;
-            lru_list.splice(lru_list.begin(), lru_list, list_iter);
-            // cache[num] уже корректен — не нужно обновлять
+            update_lru_pos(list_iter);
         } else {
             if (cache.size() >= capacity) {
-                int old_num = lru_list.back().first;
+                K old_num = lru_list.back().first;
                 lru_list.pop_back();
                 cache.erase(old_num);
             }
@@ -35,15 +42,29 @@ public:
         }
     }
 
-    int get(int num) override {
-        if (!cache.contains(num)) return -1;
+    std::optional<V> get(const K& num) override {
+        if (!cache.contains(num)) return std::nullopt;
         auto list_iter = cache[num];
-        lru_list.splice(lru_list.begin(), lru_list, list_iter);
+        update_lru_pos(list_iter);
         return list_iter->second;
     }
-};
+    V& operator[](const K& num) override {
+        if (cache.contains(num)) {
+            auto list_iter = cache[num];
+            update_lru_pos(list_iter);
+            return list_iter->second;
+        }
+        else {
+            put(num,V());
+            auto list_iter = cache[num];
+            return list_iter->second;
+        }
 
-class LFUCache : public ICache {
+
+    }
+};
+template<typename K, typename V>
+class LFUCache : public ICache<K,V> {
     std::unordered_map<int, std::tuple<int, int, std::list<int>::iterator>> cache;
     std::unordered_map<int, std::list<int>> freq_list;
     const size_t capacity;
@@ -88,7 +109,7 @@ public:
         freq++;
         freq_list[freq].push_front(num);
         cache[num] = {value, freq, freq_list[freq].begin()};
-        return value; // ← не забыли!
+        return value;
     }
 };
 
