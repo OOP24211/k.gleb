@@ -3,8 +3,15 @@ project(lab0)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(lab0 main.cpp
-        BufferManager.cpp
-        WordsExporter.cpp
-        LetterUtils.cpp)
+file(GLOB SOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+)
+
+add_executable(lab0 ${SOURCE_FILES})
+
+
+target_include_directories(lab0 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+
+
 
