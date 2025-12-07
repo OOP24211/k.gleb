@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.0)
 project(game)
 
-set (SFML_DIR "C:/Users/Jleb/SFML/lib/cmake/SFML")
+set (SFML_DIR "ПУТЬ К ПАПКЕ SFML")
 set(CMAKE_PREFIX_PATH ${SFML_DIR})
 find_package(SFML REQUIRED COMPONENTS system window graphics)
 
