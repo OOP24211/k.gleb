@@ -4,10 +4,9 @@
 #include <algorithm>
 
 class PositionSwitcher {
-    int new_value = 0;
 public:
     bool switch_zero_pos(std::vector<int>& vec,size_t index){
-        new_value = vec[index];
+        int new_value = vec[index];
         auto it = std::find(vec.begin(),vec.end(),0);
         size_t zero_index = std::distance(vec.begin(), it);
         if ((index == zero_index-1 or index == zero_index+1 or index == zero_index-2 or index == zero_index+2) and index < vec.size() ) {
@@ -21,213 +20,133 @@ public:
 
 };
 
-
-void resetGame(std::vector<int>& game_table,
-               size_t& current_selection_index)
-{
-    // Начальное состояние игры
-    game_table = {1, 1, 1, 0, 2, 2, 2};
-    current_selection_index = (game_table.size()) / 2;
-
-    std::cout << "--- Game Restarted ---" << std::endl;
-}
-
-
-bool showWinDialog() {
-    sf::RenderWindow dialogWindow(sf::VideoMode(600, 400), "WIN!", sf::Style::Close);
-    dialogWindow.setFramerateLimit(30);
-
-    sf::Font font;
-    if (!font.loadFromFile("arial.ttf")) {
-        std::cerr << "Ошибка загрузки шрифта! Текст может не отобразиться." << std::endl;
-    }
-
-    sf::Text message;
-    message.setFont(font);
-    message.setString("NicE Job! Press Esc to restart game");
-    message.setCharacterSize(30);
-    message.setFillColor(sf::Color::Black);
-
-    sf::FloatRect textRect = message.getLocalBounds();
-    message.setOrigin(textRect.left + textRect.width / 2.0f,
-                      textRect.top + textRect.height / 2.0f);
-    message.setPosition(dialogWindow.getSize().x / 2.0f, dialogWindow.getSize().y / 2.0f);
-
-    while (dialogWindow.isOpen()) {
-        sf::Event event;
-        while (dialogWindow.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                dialogWindow.close();
-                return false;
-            }
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Escape) {
-                    dialogWindow.close();
-                    return true;
-                }
-            }
-        }
-
-        dialogWindow.clear(sf::Color::White);
-        dialogWindow.draw(message);
-        dialogWindow.display();
-    }
-
-    return false;
-}
-
-
-
-int main() {
-    std::vector<int> game_table = {1,1,1,0,2,2,2};
-    std::array final_table = {2,2,2,0,1,1,1};
-    const size_t count_shapes= 7;
-    sf::ContextSettings settings;
-    sf::Shader glossyShader;
-    if (!glossyShader.loadFromFile("glossy_sphere.frag", sf::Shader::Fragment)) {
-        std::cerr << "Ошибка загрузки шейдера! Будет использоваться плоский цвет." << std::endl;
-        return -1;
-    }
-
-    settings.antialiasingLevel = 8;
+class GameLogic {
+private:
     PositionSwitcher switcher;
-    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML Works!", sf::Style::Default, settings);    window.setFramerateLimit(60);
-    //std::array<sf::CircleShape, count_shapes> shape_array;
-    float radius = 30.0f;
-    float spacing = 10.0f;
-    sf::CircleShape ballShape(radius);
-    ballShape.setOrigin(radius, radius);
-    float center_index = count_shapes/2;
-    size_t current_selection_index = 0;
+    const std::vector<int> FINAL_TABLE = {2,2,2,0,1,1,1};
+public:
+    std::vector<int> game_table;
+    size_t current_selection_index;
+    GameLogic() {
+        reset();
+    }
+    void reset() {
+        game_table = {1, 1, 1, 0, 2, 2, 2}; // Это правильное начальное состояние для вашей логики
+        current_selection_index = (game_table.size()) / 2;
+    }
+    bool is_win() {
+        return std::equal(game_table.begin(),game_table.end(),FINAL_TABLE.begin());
+    }
+    void select_left() {
+        if (current_selection_index >0) {
+            current_selection_index--;
+        }
+    }
+
+    void select_right() {
+        if (current_selection_index < game_table.size()-1) {
+            current_selection_index++;
+        }
+    }
+    bool make_move() {
+        if (switcher.switch_zero_pos(game_table,current_selection_index)) {
+            auto it = std::find(game_table.begin(),game_table.end(),0);
+            size_t new_zero_index = std::distance(game_table.begin(),it);
+            current_selection_index = new_zero_index;
+            return true;
+        }
+        return false;
+
+    }
+};
+
+class GameView {
+private:
+
+    sf::Shader glossyShader;
+    sf::CircleShape ballShape;
+    sf::Sprite backgroundSprite;
+    sf::RenderWindow& window;
+    sf::Texture backgroundTextureMember;
+
+    const float RADIUS = 30.0f;
+    const float SPACING = 10.0f;
     const float OUTLINE_THICKNESS = 5.0f;
     const sf::Color HIGHLIGHT_COLOR = sf::Color::White;
-    const sf::Color color1 = sf::Color(255, 55, 55, 255);
-    const sf::Color color2 = sf::Color(40, 40, 55, 255);
-    const sf::Color color3 = sf::Color(55, 255, 55, 255);
-    sf::Texture backgroundTexture;
-
-    backgroundTexture.loadFromFile("background.png");
-    sf::Sprite backgroundSprite(backgroundTexture);
-    float window_width = static_cast<float>(window.getSize().x);
-    float window_height = static_cast<float>(window.getSize().y);
-    if (backgroundTexture.getSize().x > 0 && backgroundTexture.getSize().y > 0) {
-        float scaleX = window_width / backgroundTexture.getSize().x;
-        float scaleY = window_height / backgroundTexture.getSize().y;
-        backgroundSprite.setScale(scaleX, scaleY);
+    const sf::Color color1 = sf::Color(255, 55, 55, 255); // Красный (1)
+    const sf::Color color2 = sf::Color(40, 40, 55, 255);  // Пустое место (0)
+    const sf::Color color3 = sf::Color(55, 255, 55, 255); // Зеленый (2)
+public:
+    GameView(sf::RenderWindow& win) :window(win) {
+        if (!loadAssets()) {
+            std::cerr<<"Error"<<std::endl;
+        }
+        ballShape.setRadius(RADIUS);
+        ballShape.setOrigin(RADIUS,RADIUS);
     }
-    float block_width = (radius * 2.0f)+spacing;
-    float centerX = window_width/2.0f;
-    float centerY = window_height/2.0f;
-
-
-
-
-    while (window.isOpen()) {
-        if (std::equal(game_table.begin(), game_table.end(), final_table.begin())) {
-            if (showWinDialog()) {
-                resetGame(game_table, current_selection_index);
-            } else {
-                window.close();
-            }
+    bool loadAssets() {
+        if (!glossyShader.loadFromFile("glossy_sphere.frag",sf::Shader::Fragment)) {
+            std::cerr<<"Shader Error! Using flat color"<<std::endl;
+            return false;
         }
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
+        if (backgroundTextureMember.loadFromFile("background.png")) {
+            float window_width = static_cast<float>(window.getSize().x);
+            float window_height = static_cast<float>(window.getSize().y);
 
-            if (event.type==sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Left) {
-                    if (current_selection_index > 0) {
-                        current_selection_index--;
-                    }
-                }
-                else if (event.key.code == sf::Keyboard::Right) {
-                    if (current_selection_index < count_shapes-1) {
-                        current_selection_index++;
-                    }
-                }
-                else if (event.key.code == sf::Keyboard::Space) {
-                    size_t pressed_index = current_selection_index;
-                    // Пытаемся поменять местами шарик и пустую ячейку
-                    if (switcher.switch_zero_pos(game_table, pressed_index)) {
-                        // После успешного перемещения, выделение перемещается на пустую ячейку (теперь заполненную)
-                        // Находим новый индекс пустого места (0)
-                        auto it = std::find(game_table.begin(), game_table.end(), 0);
-                        size_t new_zero_index = std::distance(game_table.begin(), it);
-
-                        // Выделение переходит на новую пустую позицию
-                        current_selection_index = new_zero_index;
-                    }
-
-                }
-            }
+            backgroundSprite.setTexture(backgroundTextureMember);
+            float scaleX = window_width / backgroundTextureMember.getSize().x;
+            float scaleY = window_height / backgroundTextureMember.getSize().y;
+            backgroundSprite.setScale(scaleX,scaleY);
         }
+        return true;
+    }
+    void draw(const std::vector<int> &game_table, size_t current_selection_index) {
 
-        //   shape_array[current_selection_index].setOutlineThickness(OUTLINE_THICKNESS);
-        // shape_array[current_selection_index].setOutlineColor(HIGHLIGHT_COLOR);
+        window.draw(backgroundSprite);
 
-        window.clear(sf::Color::Black);
+        float window_width = static_cast<float>(window.getSize().x);
+        float window_height = static_cast<float>(window.getSize().y);
+        float block_width = (RADIUS * 2.0f) + SPACING;
+        float centerX = window_width / 2.0f;
+        float centerY = window_height / 2.0f;
+        size_t count_shapes = game_table.size();
+        float center_index = count_shapes / 2.0f;
 
-        if (backgroundTexture.getSize().x > 0) { // Отрисовываем спрайт, только если текстура загружена
-            window.draw(backgroundSprite);
-        }
-        //   for (const auto & shape:shape_array) {
-        //   window.draw(shape);
-        //   }
-        // ...
-        float offset_index;
-        float new_x;
-        sf::Color currentColor;
+        for (size_t i=0; i< count_shapes; ++i) {
+            float offset_index = static_cast<float>(i) - center_index;
+            float new_x = centerX + offset_index * block_width;
 
-for (size_t i = 0; i < count_shapes; ++i) {
-
-            offset_index = static_cast<float>(i) - center_index;
-            new_x = centerX + offset_index * block_width;
-
-            // --- 0. ОТРИСОВКА ОТБРАСЫВАЕМОЙ ТЕНИ (Drop Shadow) ---
-            if (game_table[i] != 0) {
-                sf::CircleShape dropShadow(radius * 1.0f); // Ещё больше радиус (1.25x)
-                dropShadow.setOrigin(radius * 1.0f, radius * 1.0f);
-
-                // Смещение: немного вправо и вниз (для лучшего разделения с шариком)
-                dropShadow.setPosition(new_x + 8.0f, centerY + 12.0f);
-
-                // Цвет: Сделаем еще более прозрачным (Alpha 70)
-                dropShadow.setFillColor(sf::Color(0, 0, 0, 40));
-                window.draw(dropShadow);
-            }
-
-            // Определяем цвет и позицию
+            sf::Color currentColor;
             if (game_table[i] == 1) {
                 currentColor = color1;
             } else if (game_table[i] == 0) {
-                currentColor=color2;
+                currentColor = color2;
             } else {
                 currentColor = color3;
             }
 
             ballShape.setPosition(new_x, centerY);
-
-            // --- 1. Отрисовка шарика с шейдером ---
+            if (game_table[i] != 0) {
+                sf::CircleShape dropShadow(RADIUS * 1.0f);
+                dropShadow.setOrigin(RADIUS * 1.0f, RADIUS * 1.0f);
+                dropShadow.setPosition(new_x + 8.0f, centerY + 12.0f);
+                dropShadow.setFillColor(sf::Color(0, 0, 0, 40));
+                window.draw(dropShadow);
+            }
             if (game_table[i] == 0) {
-                // Пустая ячейка (плоский желтый)
+                // Пустая ячейка (плоский цвет)
                 ballShape.setFillColor(currentColor);
                 window.draw(ballShape);
             } else {
-                // Объёмный шарик
+                // Объёмный шарик (с шейдером)
                 glossyShader.setParameter("u_base_color", currentColor);
                 glossyShader.setParameter("u_center", new_x, centerY);
-                glossyShader.setParameter("u_radius", radius);
+                glossyShader.setParameter("u_radius", RADIUS);
                 window.draw(ballShape, &glossyShader);
             }
-
-            // --- 2. ОТРИСОВКА ЭФФЕКТА НЕОНОВОГО КОНТУРА ---
             if (i == current_selection_index) {
-
-
-                // b) Основное белое, яркое кольцо (сам ободок)
-                sf::CircleShape outline(radius + OUTLINE_THICKNESS / 2.0f);
-                outline.setOrigin(radius + OUTLINE_THICKNESS / 2.0f, radius + OUTLINE_THICKNESS / 2.0f);
+                sf::CircleShape outline(RADIUS + OUTLINE_THICKNESS / 2.0f);
+                outline.setOrigin(RADIUS + OUTLINE_THICKNESS / 2.0f, RADIUS + OUTLINE_THICKNESS / 2.0f);
                 outline.setPosition(new_x, centerY);
                 outline.setFillColor(sf::Color::Transparent);
                 outline.setOutlineThickness(OUTLINE_THICKNESS);
@@ -235,9 +154,105 @@ for (size_t i = 0; i < count_shapes; ++i) {
                 window.draw(outline);
             }
         }
-
-        window.display();
     }
 
+};
+
+class GameApp {
+private:
+    sf::RenderWindow window;
+    GameLogic logic;
+    GameView view;
+    sf::Font font;
+public:
+    GameApp():
+    window(sf::VideoMode(800, 600), "Balls Game", sf::Style::Default, sf::ContextSettings(8)),
+    logic(),
+    view(window) {
+        window.setFramerateLimit(60);
+        if (!font.loadFromFile("arial.ttf")) {
+            std::cerr << "Font Error!." << std::endl;
+        }
+    }
+   bool showWinDialog() {
+        sf::RenderWindow dialogWindow(sf::VideoMode(600, 400), "WIN!", sf::Style::Close);
+        dialogWindow.setFramerateLimit(30);
+
+        sf::Text message;
+        message.setFont(font);
+        message.setString("NicE Job! Press Esc to restart game");
+        message.setCharacterSize(30);
+        message.setFillColor(sf::Color::Black);
+
+        sf::FloatRect textRect = message.getLocalBounds();
+        message.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+        message.setPosition(dialogWindow.getSize().x / 2.0f, dialogWindow.getSize().y / 2.0f);
+
+        while (dialogWindow.isOpen()) {
+            sf::Event event;
+            while (dialogWindow.pollEvent(event)) {
+                if (event.type == sf::Event::Closed) {
+                    dialogWindow.close();
+                    return false;
+                }
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                    dialogWindow.close();
+                    return true;
+                }
+            }
+            dialogWindow.clear(sf::Color::White);
+            dialogWindow.draw(message);
+            dialogWindow.display();
+        }
+        return false;
+    }
+
+    void processEvents() {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Left) {
+                    logic.select_left();
+                } else if (event.key.code == sf::Keyboard::Right) {
+                    logic.select_right();
+                } else if (event.key.code == sf::Keyboard::Space) {
+                    logic.make_move(); // Выполнение хода
+                }
+            }
+        }
+    }
+
+    void run() {
+        while (window.isOpen()) {
+
+            // 1. Проверка победы
+            if (logic.is_win()) {
+                if (showWinDialog()) {
+                    logic.reset();
+                } else {
+                    window.close();
+                }
+            }
+
+            // 2. Обработка событий
+            processEvents();
+
+            // 3. Отрисовка
+            window.clear(sf::Color::Black);
+            view.draw(logic.game_table, logic.current_selection_index);
+            window.display();
+        }
+    }
+};
+
+
+
+int main() {
+    GameApp app;
+    app.run();
     return 0;
 }
