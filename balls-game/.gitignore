@@ -3,16 +3,3 @@
 /.cmake/
 
 /.idea/
-*.iws
-*.iml
-*.ipr
-
-Thumbs.db
-.DS_Store
-
-*.exe
-*.dll
-*.so
-*.dylib
-*.lib
-*.pdb
