@@ -5,17 +5,17 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 # ------------------- Основное приложение -------------------
-
+add_library(main_app INTERFACE)
+target_include_directories(main_app INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 file(GLOB ALL_SOURCE_FILES
     "src/*.cpp"
     "tests/tests.cpp"
 )
 
 add_executable(lab1 src/main.cpp)
+target_link_libraries(lab1 PRIVATE main_app)
 
-target_include_directories(lab1 
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+
 
 # ------------------- GoogleTest -------------------
 include(FetchContent)
