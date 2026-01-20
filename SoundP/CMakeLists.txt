@@ -13,12 +13,12 @@ add_custom_command(
         TARGET SoundP POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/objects"
-        "$<TARGET_FILE_DIR:SoundP>/objects"
+        "$<TARGET_FILE_DIR:SoundP>/"
 )
 add_custom_command(
         TARGET SoundP POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/config"
-        "$<TARGET_FILE_DIR:SoundP>/config"
+        "$<TARGET_FILE_DIR:SoundP>/"
 )
 
