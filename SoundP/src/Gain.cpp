@@ -1,4 +1,4 @@
-#include "../include/Gain.hpp"
+#include "Gain.hpp"
 
 void Gain::process(const std::vector<int16_t>& in, std::vector<int16_t>& out) {
         out.resize(in.size());

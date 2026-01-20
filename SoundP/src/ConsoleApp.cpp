@@ -1,12 +1,12 @@
-#include "../ConsoleApp.hpp"
+#include "ConsoleApp.hpp"
 #include <vector>
 #include <cstdint>
 #include <iostream>
-#include "../Exceptions.hpp"
-#include "../WavWorker.hpp"
-#include "../include/ConfigParser.hpp"
-#include "../IConverter.hpp"
-#include "../ConverterFactory.hpp"
+#include "Exceptions.hpp"
+#include "WavWorker.hpp"
+#include "ConfigParser.hpp"
+#include "IConverter.hpp"
+#include "ConverterFactory.hpp"
 
 
 

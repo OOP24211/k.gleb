@@ -1,6 +1,6 @@
-#include "../include/WavWorker.hpp"
+#include "WavWorker.hpp"
 #include <cstring>
-#include "../Exceptions.hpp"
+#include "Exceptions.hpp"
 
 
 void WavWorker::read(const std::string& path,std::vector<int16_t>& samples) {

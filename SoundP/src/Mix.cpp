@@ -1,4 +1,4 @@
-#include "../include/Mix.hpp"
+#include "Mix.hpp"
 #include <algorithm>
 
 void Mix::process(const std::vector<int16_t>& in, std::vector<int16_t>& out) {

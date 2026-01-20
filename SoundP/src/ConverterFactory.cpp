@@ -1,8 +1,8 @@
-#include "../ConverterFactory.hpp"
-#include "../Exceptions.hpp"
-#include "../Mute.hpp"
-#include "../Mix.hpp"
-#include "../include/Gain.hpp"
+#include "ConverterFactory.hpp"
+#include "Exceptions.hpp"
+#include "Mute.hpp"
+#include "Mix.hpp"
+#include "Gain.hpp"
 
 std::unique_ptr<IConverter> createConverter(const std::string& name, const std::vector<std::string>& args,const std::vector<std::vector<int16_t>>& extra_streams) {
     if (name == "mute") {

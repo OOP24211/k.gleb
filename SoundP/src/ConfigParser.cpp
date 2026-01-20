@@ -1,5 +1,5 @@
-#include "../include/ConfigParser.hpp"
-#include "../include/Exceptions.hpp"
+#include "ConfigParser.hpp"
+#include "Exceptions.hpp"
 #include <fstream>
 #include <sstream>
 

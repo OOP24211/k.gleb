@@ -1,4 +1,4 @@
-#include "../include/Mute.hpp"
+#include "Mute.hpp"
 
 void Mute::process(const std::vector<int16_t>& in, std::vector<int16_t>& out) {
         out = in;
